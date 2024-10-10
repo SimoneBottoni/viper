@@ -4,14 +4,14 @@ use num_traits::{One, Zero};
 use std::ops::{Add, Mul, Neg};
 
 pub struct EC {
-    a: BigInt,
-    b: BigInt,
-    p: BigInt,
-    n: BigInt,
+    pub a: BigInt,
+    pub b: BigInt,
+    pub p: BigInt,
+    pub n: BigInt,
 }
 
 lazy_static! {
-    static ref DEFAULTEC: EC = EC {
+    pub static ref DEFAULTEC: EC = EC {
         a: BigInt::from(203298074u64),
         b: BigInt::from(2030070442u64),
         p: BigInt::from(2756527723u64),
@@ -21,8 +21,8 @@ lazy_static! {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Point {
-    x: Option<BigInt>,
-    y: Option<BigInt>,
+    pub x: Option<BigInt>,
+    pub y: Option<BigInt>,
 }
 
 impl Default for Point {
@@ -37,11 +37,11 @@ impl Default for Point {
 }
 
 impl Point {
-    fn is_none(&self) -> bool {
+    pub fn is_none(&self) -> bool {
         self.x.is_none()
     }
 
-    fn infinity() -> Point {
+    pub fn infinity() -> Point {
         Point { x: None, y: None }
     }
 
@@ -58,14 +58,15 @@ impl Point {
         }
 
         // (3 * pow(p[0], 2, self.p) + self.a) * gmpy2.invert(2 * p[1], self.p) % self.p
-        let l_1 = (BigInt::from(3) * p_x.modpow(&BigInt::from(2), &DEFAULTEC.p)).add(&DEFAULTEC.a);
-        let l_2 = (BigInt::from(2) * &p_y).modinv(&DEFAULTEC.p).unwrap();
+        let l_1 = BigInt::from(3) * p_x.modpow(&BigInt::from(2), &DEFAULTEC.p) + &DEFAULTEC.a;
+        let l_2 = ((BigInt::from(2) * &p_y).modinv(&DEFAULTEC.p).unwrap())
+            .modpow(&BigInt::one(), &DEFAULTEC.p);
         let l = l_1 * l_2;
 
         // x3 = (pow(l, 2, self.p) - 2 * p[0]) % self.p
         // y3 = (l * (p[0] - x3) - p[1]) % self.p
-
-        let x3 = l.modpow(&BigInt::from(2), &DEFAULTEC.p) - (BigInt::from(2) * &p_x);
+        let x3 = (l.modpow(&BigInt::from(2), &DEFAULTEC.p) - (BigInt::from(2) * &p_x))
+            .modpow(&BigInt::one(), &DEFAULTEC.p);
         let y3 = (l * (p_x - &x3) - p_y).modpow(&BigInt::one(), &DEFAULTEC.p);
 
         Point {
