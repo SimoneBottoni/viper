@@ -11,10 +11,10 @@ pub struct Client {
 
 impl Client {
     pub fn compute_commitments(data: &[Vec<BigInt>], random: &BigInt) -> Vec<Commitment> {
-        data.par_iter().flatten()
-            .map(|el| 
-                Commitment::commit(&el, &random)
-                ).collect()
+        data.par_iter()
+            .flatten()
+            .map(|el| Commitment::commit(el, random))
+            .collect()
     }
 
     pub fn verify_commitment(

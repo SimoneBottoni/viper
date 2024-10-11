@@ -98,7 +98,7 @@ impl Add for &Point {
     type Output = Point;
 
     fn add(self, rhs: Self) -> Self::Output {
-        if self.eq(&rhs) {
+        if self.eq(rhs) {
             return self.double();
         }
 

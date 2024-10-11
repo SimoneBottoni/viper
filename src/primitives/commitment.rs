@@ -1,7 +1,7 @@
-use std::iter::Sum;
 use crate::primitives::ec::Point;
 use anyhow::anyhow;
 use num_bigint::BigInt;
+use std::iter::Sum;
 use std::ops::{Add, Deref};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -12,7 +12,7 @@ pub struct Commitment {
 impl Default for Commitment {
     fn default() -> Self {
         Self {
-            c: Point::infinity()
+            c: Point::infinity(),
         }
     }
 }
@@ -21,7 +21,7 @@ impl Commitment {
     pub fn new(c: Point) -> Self {
         Self { c }
     }
-    
+
     pub fn commit(w: &BigInt, r: &BigInt) -> Commitment {
         let g_w = Point::default() * w;
         let h_r = Point::default() * r;
@@ -40,12 +40,14 @@ impl Add for &Commitment {
     type Output = Commitment;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Commitment { c: &self.c + &rhs.c }
+        Commitment {
+            c: &self.c + &rhs.c,
+        }
     }
 }
 
 impl Sum for Commitment {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         let mut res = Point::infinity();
         for el in iter {
             res = &res + &el.c
