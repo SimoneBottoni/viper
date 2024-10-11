@@ -80,7 +80,7 @@ impl Iterator for PollardRhoSequence {
     }
 }
 
-fn pollards_rho(g: &Point, p: &Point) -> anyhow::Result<BigInt> {
+pub fn pollards_rho(g: &Point, p: &Point) -> anyhow::Result<BigInt> {
     for _ in 0..3 {
         let sequence = PollardRhoSequence::build(g.clone(), p.clone());
 

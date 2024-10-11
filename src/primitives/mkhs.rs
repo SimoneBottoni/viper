@@ -13,17 +13,6 @@ use sha2::Sha256;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Label {
-    id: u64,
-}
-
-impl Label {
-    pub fn new(id: u64) -> Self {
-        Self { id }
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Lam {
     client_id: u64,
     sig: ed25519_dalek::Signature,
@@ -186,7 +175,6 @@ impl Mkhs {
 
     pub fn verify(
         &self,
-        labels: &[Label],
         pks: &HashMap<u64, PK>,
         messages: &[Fr],
         signature: &Signature,
@@ -214,8 +202,9 @@ impl Mkhs {
         let big_s_pair = Bls12_381::pairing(self.g1, signature.big_s);
 
         let mut tags_scale_part = PairingOutput::default();
-        for label in labels.iter() {
-            tags_scale_part += pks.get(&label.id).unwrap().hs[0];
+
+        for pk in pks.values() {
+            tags_scale_part += pk.hs[0];
         }
 
         let mut msg_part = G1Projective::default();
@@ -252,17 +241,11 @@ mod tests {
         let mkhs = Mkhs::setup(n, t);
         let id = random();
         let key = mkhs.generate_keys(id);
-        let label = Label::new(key.sk.k);
 
         let messages = vec![Fr::from(2), Fr::from(10)];
 
         let signature = mkhs.sign(&key.sk, &messages);
-        let check = mkhs.verify(
-            &[label],
-            &HashMap::from([(id, key.pk)]),
-            &messages,
-            &signature,
-        );
+        let check = mkhs.verify(&HashMap::from([(id, key.pk)]), &messages, &signature);
 
         assert!(check.is_ok());
     }
@@ -277,7 +260,6 @@ mod tests {
         // First user
         let id = random();
         let key = mkhs.generate_keys(id);
-        let label = Label::new(key.sk.k);
 
         let messages = vec![Fr::from(2), Fr::from(10)];
         let signature = mkhs.sign(&key.sk, &messages);
@@ -285,7 +267,6 @@ mod tests {
         // Second user
         let id2 = random();
         let key2 = mkhs.generate_keys(id2);
-        let label2 = Label::new(key2.sk.k);
 
         let messages2 = vec![Fr::from(2), Fr::from(10)];
         let signature2 = mkhs.sign(&key2.sk, &messages2);
@@ -299,7 +280,6 @@ mod tests {
         let combined_signatures = mkhs.eval(&[signature, signature2]);
 
         let check = mkhs.verify(
-            &[label, label2],
             &HashMap::from([(id, key.pk), (id2, key2.pk)]),
             &combined_messages,
             &combined_signatures,
