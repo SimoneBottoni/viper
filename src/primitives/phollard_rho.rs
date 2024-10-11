@@ -25,11 +25,11 @@ impl PollardRhoSequence {
 
         let a1: BigInt = BigInt::from(thread_rng().gen_range(1..=n));
         let b1: BigInt = BigInt::from(thread_rng().gen_range(1..=n));
-        let x1 = (p1.clone() * &a1) + (p2.clone() * &b1);
+        let x1 = &(p1.clone() * &a1) + &(p2.clone() * &b1);
 
         let a2: BigInt = BigInt::from(thread_rng().gen_range(1..=n));
         let b2: BigInt = BigInt::from(thread_rng().gen_range(1..=n));
-        let x2 = (p1.clone() * &a2) + (p2.clone() * &b2);
+        let x2 = &(p1.clone() * &a2) + &(p2.clone() * &b2);
 
         Self {
             p1,
@@ -60,7 +60,7 @@ impl Iterator for PollardRhoSequence {
         if i == BigInt::zero() {
             self.a += &self.a1;
             self.b += &self.b1;
-            self.x = self.x.clone() + self.x1.clone();
+            self.x = &self.x + &self.x1;
         } else if i == BigInt::one() {
             self.a *= BigInt::from(2);
             self.b *= BigInt::from(2);
@@ -68,7 +68,7 @@ impl Iterator for PollardRhoSequence {
         } else if i == BigInt::from(2) {
             self.a += &self.a2;
             self.b += &self.b2;
-            self.x = self.x.clone() + self.x2.clone();
+            self.x = &self.x + &self.x2;
         } else {
             panic!("Iterator error.")
         }

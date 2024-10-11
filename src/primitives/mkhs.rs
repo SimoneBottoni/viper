@@ -15,12 +15,11 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Label {
     id: u64,
-    tag: usize,
 }
 
 impl Label {
-    fn new(id: u64, tag: usize) -> Self {
-        Self { id, tag }
+    pub fn new(id: u64) -> Self {
+        Self { id }
     }
 }
 
@@ -67,8 +66,8 @@ pub struct PK {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct KeyPair {
-    sk: SK,
-    pk: PK,
+    pub sk: SK,
+    pub pk: PK,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -124,7 +123,7 @@ impl Mkhs {
         }
     }
 
-    pub fn sign(&self, sk: &SK, label: &Label, message: &[Fr]) -> Signature {
+    pub fn sign(&self, sk: &SK, message: &[Fr]) -> Signature {
         let z = Fr::from(sk.k);
         let big_z = self.g2 * z;
 
@@ -134,7 +133,7 @@ impl Mkhs {
         let r = Fr::rand(&mut thread_rng());
         let s = Fr::rand(&mut thread_rng());
 
-        let mut big_a = self.g1 * (sk.xs[label.tag] + r);
+        let mut big_a = self.g1 * (sk.xs[0] + r);
         let mut big_c = self.g1 * s;
 
         for (i, v) in self.big_hs.iter().enumerate() {
@@ -149,7 +148,7 @@ impl Mkhs {
 
         Signature {
             lams: vec![Lam {
-                client_id: label.id,
+                client_id: sk.k,
                 sig,
                 big_z,
                 big_a,
@@ -216,7 +215,7 @@ impl Mkhs {
 
         let mut tags_scale_part = PairingOutput::default();
         for label in labels.iter() {
-            tags_scale_part += pks.get(&label.id).unwrap().hs[label.tag];
+            tags_scale_part += pks.get(&label.id).unwrap().hs[0];
         }
 
         let mut msg_part = G1Projective::default();
@@ -253,11 +252,11 @@ mod tests {
         let mkhs = Mkhs::setup(n, t);
         let id = random();
         let key = mkhs.generate_keys(id);
-        let label = Label::new(key.sk.k, 0);
+        let label = Label::new(key.sk.k);
 
         let messages = vec![Fr::from(2), Fr::from(10)];
 
-        let signature = mkhs.sign(&key.sk, &label, &messages);
+        let signature = mkhs.sign(&key.sk, &messages);
         let check = mkhs.verify(
             &[label],
             &HashMap::from([(id, key.pk)]),
@@ -278,18 +277,18 @@ mod tests {
         // First user
         let id = random();
         let key = mkhs.generate_keys(id);
-        let label = Label::new(key.sk.k, 0);
+        let label = Label::new(key.sk.k);
 
         let messages = vec![Fr::from(2), Fr::from(10)];
-        let signature = mkhs.sign(&key.sk, &label, &messages);
+        let signature = mkhs.sign(&key.sk, &messages);
 
         // Second user
         let id2 = random();
         let key2 = mkhs.generate_keys(id2);
-        let label2 = Label::new(key2.sk.k, 0);
+        let label2 = Label::new(key2.sk.k);
 
         let messages2 = vec![Fr::from(2), Fr::from(10)];
-        let signature2 = mkhs.sign(&key2.sk, &label2, &messages2);
+        let signature2 = mkhs.sign(&key2.sk, &messages2);
 
         // Combined signatures
         let combined_messages: Vec<Fr> = messages

@@ -94,7 +94,7 @@ impl Neg for Point {
     }
 }
 
-impl Add for Point {
+impl Add for &Point {
     type Output = Point;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -108,14 +108,14 @@ impl Add for Point {
         if rhs.is_none() {
             return self.clone();
         }
-        if rhs == -self.clone() {
+        if *rhs == -self.clone() {
             return Point::infinity();
         }
 
-        let p1_x = self.x.unwrap();
-        let p1_y = self.y.unwrap();
-        let p2_x = rhs.x.unwrap();
-        let p2_y = rhs.y.unwrap();
+        let p1_x = self.x.clone().unwrap();
+        let p1_y = self.y.clone().unwrap();
+        let p2_x = rhs.x.clone().unwrap();
+        let p2_y = rhs.y.clone().unwrap();
 
         // l = (p2[1] - p1[1]) * gmpy2.invert(p2[0] - p1[0], self.p) % self.p
         let l = ((p2_y - &p1_y) * (&p2_x - &p1_x).modinv(&DEFAULTEC.p).unwrap())
@@ -152,7 +152,7 @@ impl Mul<&BigInt> for Point {
             let bit = &scalar % 2;
             scalar >>= 1;
             if bit == BigInt::one() {
-                res = res + temp.clone();
+                res = &res + &temp;
             }
             temp = temp.double();
         }
