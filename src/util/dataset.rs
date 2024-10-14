@@ -5,6 +5,7 @@ use rand::prelude::IteratorRandom;
 use rand::{thread_rng, Rng};
 use rayon::prelude::*;
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Dataset {
     pub dataset: Vec<Vec<BigInt>>,
 }

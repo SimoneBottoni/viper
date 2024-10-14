@@ -2,7 +2,7 @@ use crate::primitives::ec::Point;
 use anyhow::anyhow;
 use num_bigint::BigInt;
 use std::iter::Sum;
-use std::ops::{Add, Deref};
+use std::ops::Add;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Commitment {
