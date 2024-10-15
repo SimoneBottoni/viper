@@ -12,7 +12,7 @@ use viper::system::aggregator::Aggregator;
 use viper::system::client::Client;
 use viper::util::dataset::Dataset;
 
-fn bench(n_row: usize, n_col: usize, n_client: usize, c: &mut Criterion) {
+fn bench(n_row: usize, n_col: usize, n_client: usize, decimals: u32, c: &mut Criterion) {
     // Setup
     let mkhs = Mkhs::setup(n_client, n_col);
     let secrets: Vec<BigInt> = (0..n_client)
@@ -23,7 +23,7 @@ fn bench(n_row: usize, n_col: usize, n_client: usize, c: &mut Criterion) {
     let clients: Vec<Client> = (1..=n_client)
         .into_par_iter()
         .map(|id| {
-            let dataset = Dataset::build(n_col, n_row);
+            let dataset = Dataset::build(n_col, n_row, decimals);
             let key_pair = mkhs.generate_keys(id as u64);
             Client::new(id as u64, key_pair, dataset, secrets[id - 1].clone())
         })
@@ -124,7 +124,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let n_col = 2;
     let n_client = 1;
 
-    bench(n_row, n_col, n_client, c)
+    let decimals = 4;
+
+    bench(n_row, n_col, n_client, decimals, c)
 }
 
 criterion_group! {
