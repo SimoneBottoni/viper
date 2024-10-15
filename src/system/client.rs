@@ -14,7 +14,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(id: u64, key_pair: KeyPair, dataset: Dataset, secret: BigInt) -> Self {
+    pub const fn new(id: u64, key_pair: KeyPair, dataset: Dataset, secret: BigInt) -> Self {
         Self {
             id,
             key_pair,

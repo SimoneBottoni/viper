@@ -22,7 +22,7 @@ pub struct Lam {
 }
 
 impl Lam {
-    fn clone_empty(&self) -> Lam {
+    fn clone_empty(&self) -> Self {
         Self {
             big_a: G1Projective::default(),
             big_c: G1Projective::default(),
@@ -70,7 +70,7 @@ pub struct Mkhs {
 }
 
 impl Mkhs {
-    pub fn setup(n: usize, t: usize) -> Mkhs {
+    pub fn setup(n: usize, t: usize) -> Self {
         let g1 = G1Projective::generator();
         let g2 = G2Projective::generator();
         let gt = Bls12_381::pairing(g1, g2);
@@ -80,7 +80,7 @@ impl Mkhs {
             .map(|_| G1Projective::rand(&mut thread_rng()))
             .collect();
 
-        Mkhs {
+        Self {
             g1,
             g2,
             gt,

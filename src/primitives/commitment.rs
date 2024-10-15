@@ -18,14 +18,14 @@ impl Default for Commitment {
 }
 
 impl Commitment {
-    pub fn new(c: Point) -> Self {
+    pub const fn new(c: Point) -> Self {
         Self { c }
     }
 
-    pub fn commit(w: &BigInt, r: &BigInt) -> Commitment {
+    pub fn commit(w: &BigInt, r: &BigInt) -> Self {
         let g_w = Point::default() * w;
         let h_r = Point::default() * r;
-        Commitment { c: &g_w + &h_r }
+        Self { c: &g_w + &h_r }
     }
 
     pub fn open(&self, w: &BigInt, r: &BigInt) -> anyhow::Result<()> {
@@ -52,7 +52,7 @@ impl Sum for Commitment {
         for el in iter {
             res = &res + &el.c
         }
-        Commitment::new(res)
+        Self::new(res)
     }
 }
 

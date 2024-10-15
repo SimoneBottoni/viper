@@ -29,7 +29,7 @@ impl Default for Point {
     fn default() -> Self {
         let x = BigInt::from(1668671046u64);
         let y = BigInt::from(372808598u64);
-        Point {
+        Self {
             x: Some(x),
             y: Some(y),
         }
@@ -37,15 +37,15 @@ impl Default for Point {
 }
 
 impl Point {
-    pub fn is_none(&self) -> bool {
+    pub const fn is_none(&self) -> bool {
         self.x.is_none()
     }
 
-    pub fn infinity() -> Point {
-        Point { x: None, y: None }
+    pub const fn infinity() -> Self {
+        Self { x: None, y: None }
     }
 
-    pub fn double(&self) -> Point {
+    pub fn double(&self) -> Self {
         if self.is_none() {
             return self.clone();
         }
@@ -54,7 +54,7 @@ impl Point {
         let p_y = self.y.clone().unwrap();
 
         if p_y.is_zero() {
-            return Point::infinity();
+            return Self::infinity();
         }
 
         // (3 * pow(p[0], 2, self.p) + self.a) * gmpy2.invert(2 * p[1], self.p) % self.p
@@ -69,7 +69,7 @@ impl Point {
             .modpow(&BigInt::one(), &DEFAULTEC.p);
         let y3 = (l * (p_x - &x3) - p_y).modpow(&BigInt::one(), &DEFAULTEC.p);
 
-        Point {
+        Self {
             x: Some(x3),
             y: Some(y3),
         }
@@ -77,19 +77,16 @@ impl Point {
 }
 
 impl Neg for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn neg(self) -> Self::Output {
         if self.is_none() {
-            return Point::infinity();
+            return Self::infinity();
         }
 
-        Point {
+        Self {
             x: self.x.clone(),
-            y: self
-                .y
-                .clone()
-                .map(|y| y.neg().modpow(&BigInt::one(), &DEFAULTEC.p)),
+            y: self.y.map(|y| y.neg().modpow(&BigInt::one(), &DEFAULTEC.p)),
         }
     }
 }
@@ -136,14 +133,14 @@ impl Add for &Point {
 }
 
 impl Mul<&BigInt> for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn mul(self, rhs: &BigInt) -> Self::Output {
         if self.is_none() {
-            return self.clone();
+            return self;
         }
 
-        let mut res = Point::infinity();
+        let mut res = Self::infinity();
         let mut temp = self;
 
         let mut scalar = rhs.clone();

@@ -11,8 +11,8 @@ pub struct Dataset {
 }
 
 impl Dataset {
-    pub fn new(data: &[Vec<BigInt>]) -> Dataset {
-        Dataset {
+    pub fn new(data: &[Vec<BigInt>]) -> Self {
+        Self {
             dataset: data.to_vec(),
         }
     }
@@ -22,7 +22,7 @@ impl Dataset {
             .map(|_| thread_rng().gen_range(0..100))
             .collect();
         let res: Vec<Vec<BigInt>> = (0..n_row).map(|_| sample_values(&values, n_col)).collect();
-        Dataset::new(&res)
+        Self::new(&res)
     }
 
     pub fn fr(&self) -> Vec<Vec<Fr>> {

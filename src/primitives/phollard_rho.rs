@@ -51,11 +51,11 @@ impl Iterator for PollardRhoSequence {
     type Item = (Point, BigInt, BigInt);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let i = if let Some(x) = self.x.clone().x {
-            x / (&DEFAULTEC.p / 3 + 1)
-        } else {
-            BigInt::zero()
-        };
+        let i = self
+            .x
+            .clone()
+            .x
+            .map_or_else(BigInt::zero, |x| x / (&DEFAULTEC.p / 3 + 1));
 
         if i == BigInt::zero() {
             self.a += &self.a1;
