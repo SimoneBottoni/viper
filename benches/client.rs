@@ -123,7 +123,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let n_col = 10;
 
     let decimals_vec = vec![4, 6, 8];
-    let n_row_vec = vec![100, 500, 1000, 5000, 10000, 25000, 50000, 75000, 100000];
+    let n_row_vec = vec![100, 500, 750, 1000, 5000, 7500, 10000, 25000, 50000, 75000, 100000];
     let n_clients_vec = vec![2, 5, 10];
 
     for n_clients in n_clients_vec {
