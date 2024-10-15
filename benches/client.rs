@@ -120,13 +120,19 @@ fn bench(n_row: usize, n_col: usize, n_client: usize, decimals: u32, c: &mut Cri
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
-    let n_row = 3;
-    let n_col = 2;
-    let n_client = 1;
+    let n_col = 10;
 
-    let decimals = 4;
+    let decimals_vec = vec![4, 6, 8];
+    let n_row_vec = vec![100, 500, 1000, 5000, 10000, 25000, 50000, 75000, 100000];
+    let n_clients_vec = vec![2, 5, 10];
 
-    bench(n_row, n_col, n_client, decimals, c)
+    for n_clients in n_clients_vec {
+        for decimals in decimals_vec.clone() {
+            for n_row in n_row_vec.clone() {
+                bench(n_row, n_col, n_clients, decimals, c)
+            }
+        }
+    }
 }
 
 criterion_group! {
