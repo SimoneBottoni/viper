@@ -11,8 +11,8 @@ use viper::system::client::Client;
 use viper::util::dataset::Dataset;
 
 fn main() {
-    let n_col = 3;
-    let n_row = 10;
+    let n_col = 2;
+    let n_row = 3;
 
     let n_client = 2;
     let mkhs = Mkhs::setup(n_client, n_col);
@@ -26,7 +26,7 @@ fn main() {
     let clients: Vec<Client> = (1..=n_client)
         .into_par_iter()
         .map(|id| {
-            let dataset = Dataset::build(n_col, n_row);
+            let dataset = Dataset::build(n_col, n_row, 4);
             let key_pair = mkhs.generate_keys(id as u64);
             Client::new(id as u64, key_pair, dataset, secrets[id - 1].clone())
         })

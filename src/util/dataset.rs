@@ -1,6 +1,7 @@
 use ark_bls12_381::Fr;
-use num_bigint::BigInt;
-use num_traits::ToPrimitive;
+use bigdecimal::BigDecimal;
+use num_bigint::{BigInt, ToBigInt};
+use num_traits::{FromPrimitive, ToPrimitive};
 use rand::prelude::IteratorRandom;
 use rand::{thread_rng, Rng};
 use rayon::prelude::*;
@@ -17,11 +18,14 @@ impl Dataset {
         }
     }
 
-    pub fn build(n_col: usize, n_row: usize) -> Self {
-        let values: Vec<u64> = (0..n_row * n_col)
-            .map(|_| thread_rng().gen_range(0..100))
+    pub fn build(n_col: usize, n_row: usize, decimals: u32) -> Self {
+        let values: Vec<f64> = (0..n_row * n_col)
+            .map(|_| thread_rng().gen_range(0.0..1.0))
             .collect();
-        let res: Vec<Vec<BigInt>> = (0..n_row).map(|_| sample_values(&values, n_col)).collect();
+        let scaling_factor = BigDecimal::from_i64(10_i64.pow(decimals)).unwrap();
+        let res: Vec<Vec<BigInt>> = (0..n_row)
+            .map(|_| sample_values(&values, n_col, decimals, &scaling_factor))
+            .collect();
         Self::new(&res)
     }
 
@@ -37,12 +41,22 @@ impl Dataset {
     }
 }
 
-fn sample_values(values: &[u64], n_col: usize) -> Vec<BigInt> {
+fn sample_values(
+    values: &[f64],
+    n_col: usize,
+    decimals: u32,
+    scaling_factor: &BigDecimal,
+) -> Vec<BigInt> {
     values
         .iter()
         .choose_multiple(&mut thread_rng(), n_col)
         .par_iter()
-        .map(|el| BigInt::from(**el))
+        .map(|el| {
+            let value = BigDecimal::from_f64(**el)
+                .unwrap()
+                .with_scale(decimals.into());
+            (value * scaling_factor).to_bigint().unwrap()
+        })
         .collect()
 }
 
