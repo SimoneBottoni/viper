@@ -1,6 +1,5 @@
 use criterion::measurement::WallTime;
 use criterion::{criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion};
-use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use viper::primitives::commitment::Commitment;
 use viper::system::aggregator::Aggregator;
