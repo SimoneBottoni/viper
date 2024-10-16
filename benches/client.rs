@@ -84,11 +84,7 @@ fn bench_client_computation(
     group: &mut BenchmarkGroup<WallTime>,
 ) {
     let n_client = 1;
-    let Setup {
-        mkhs,
-        clients,
-        ..
-    } = Setup::build(n_client, rows, cols, decimals);
+    let Setup { mkhs, clients, .. } = Setup::build(n_client, rows, cols, decimals);
 
     // Computing commitments
     group.bench_function(
