@@ -136,11 +136,7 @@ fn bench_aggregator_aggregations(
     c: &mut Criterion,
 ) {
     // Setup
-    let Setup {
-        mkhs,
-        clients,
-        ..
-    } = setup(n_client, n_row, n_col, decimals);
+    let Setup { mkhs, clients, .. } = setup(n_client, n_row, n_col, decimals);
 
     let commitments: Vec<Vec<Commitment>> = clients
         .par_iter()
