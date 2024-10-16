@@ -94,7 +94,7 @@ fn bench_client_computation(
     group.bench_function(
         BenchmarkId::new(
             "computing_commitments",
-            format!("rows: {} - decimals: {}", rows, decimals),
+            format!("decimals: {} - rows: {}", decimals, rows),
         ),
         |b| {
             b.iter(|| {
@@ -108,7 +108,7 @@ fn bench_client_computation(
     group.bench_function(
         BenchmarkId::new(
             "computing_signatures",
-            format!("rows: {} - decimals: {}", rows, decimals),
+            format!("decimals: {} - rows: {}", decimals, rows),
         ),
         |b| {
             b.iter(|| {
@@ -163,7 +163,7 @@ fn bench_client_verification(
     group.bench_function(
         BenchmarkId::new(
             "verifying_commitments",
-            format!("rows: {} - decimals: {}", rows, decimals),
+            format!("decimals: {} - rows: {}", decimals, rows),
         ),
         |b| {
             b.iter(|| {
@@ -185,7 +185,7 @@ fn bench_client_verification(
     group.bench_function(
         BenchmarkId::new(
             "verifying_signatures",
-            format!("rows: {} - decimals: {}", rows, decimals),
+            format!("decimals: {} - rows: {}", decimals, rows),
         ),
         |b| {
             b.iter(|| {
@@ -224,7 +224,7 @@ fn bench_aggregator(
     group.bench_function(
         BenchmarkId::new(
             "aggregating_commitments",
-            format!("rows: {} - clients: {}", rows, clients.len()),
+            format!("clients: {} - rows: {}", clients.len(), rows),
         ),
         |b| {
             b.iter(|| {
@@ -237,7 +237,7 @@ fn bench_aggregator(
     group.bench_function(
         BenchmarkId::new(
             "aggregating_signatures",
-            format!("rows: {} - clients: {}", rows, clients.len()),
+            format!("clients: {} - rows: {}", clients.len(), rows),
         ),
         |b| {
             b.iter(|| {
@@ -272,7 +272,7 @@ fn bench_aggregator_open(
     group.bench_function(
         BenchmarkId::new(
             "opening_commitments",
-            format!("rows: {} - decimals: {}", rows, decimals),
+            format!("decimals: {} - rows: {}", decimals, rows),
         ),
         |b| {
             b.iter(|| {
@@ -322,14 +322,14 @@ pub fn criterion_benchmark_aggregator(c: &mut Criterion) {
     let mut group = c.benchmark_group("aggregator");
     let Parameters {
         cols,
+        decimals,
         rows,
         clients,
-        ..
     } = Parameters::build();
 
     for n_clients in clients {
         for n_row in rows.clone() {
-            bench_aggregator(n_row, cols, n_clients, 4, &mut group)
+            bench_aggregator(n_row, cols, n_clients, decimals[0], &mut group)
         }
     }
     group.finish();
