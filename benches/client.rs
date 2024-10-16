@@ -12,8 +12,14 @@ use viper::system::aggregator::Aggregator;
 use viper::system::client::Client;
 use viper::util::dataset::Dataset;
 
-fn bench(n_row: usize, n_col: usize, n_client: usize, decimals: u32, c: &mut Criterion) {
-    // Setup
+struct Setup {
+    mkhs: Mkhs,
+    aggregated_secret: BigInt,
+    clients: Vec<Client>,
+    pks: HashMap<u64, PK>,
+}
+
+fn setup(n_client: usize, n_row: usize, n_col: usize, decimals: u32) -> Setup {
     let mkhs = Mkhs::setup(n_client, n_col);
     let secrets: Vec<BigInt> = (0..n_client)
         .map(|_| BigInt::from(rand::thread_rng().gen_range(1..=100)))
@@ -34,6 +40,22 @@ fn bench(n_row: usize, n_col: usize, n_client: usize, decimals: u32, c: &mut Cri
             .par_iter()
             .map(|client| (client.id, client.key_pair.pk.clone())),
     );
+    Setup {
+        mkhs,
+        aggregated_secret,
+        clients,
+        pks,
+    }
+}
+
+fn bench_client(n_row: usize, n_col: usize, decimals: u32, c: &mut Criterion) {
+    let n_client = 1;
+    let Setup {
+        mkhs,
+        aggregated_secret,
+        clients,
+        pks,
+    } = setup(n_client, n_row, n_col, decimals);
 
     // Computing commitments
     c.bench_function("Computing commitments.", |b| {
@@ -61,30 +83,17 @@ fn bench(n_row: usize, n_col: usize, n_client: usize, decimals: u32, c: &mut Cri
         })
         .collect();
 
-    // Aggregating commitments
-    c.bench_function("Aggregating commitments.", |b| {
-        b.iter(|| {
-            Aggregator::aggregate_commitments(&commitments);
-        })
-    });
-    let aggregated_commitments = Aggregator::aggregate_commitments(&commitments);
+    // Aggregation
+    let aggregated_dataset = clients[0]
+        .dataset
+        .dataset
+        .iter()
+        .flatten()
+        .map(|e| e.clone())
+        .collect::<Vec<BigInt>>();
 
-    // Aggregating signatures
-    c.bench_function("Aggregating signatures.", |b| {
-        b.iter(|| {
-            Aggregator::aggregate_signatures(&mkhs, &signatures);
-        })
-    });
-    let aggregated_signatures = Aggregator::aggregate_signatures(&mkhs, &signatures);
-
-    // Opening commitments
-    c.bench_function("Opening commitments.", |b| {
-        b.iter(|| {
-            let _ = Aggregator::open_commitments(&aggregated_commitments, &aggregated_secret);
-        })
-    });
-    let aggregated_dataset =
-        Aggregator::open_commitments(&aggregated_commitments, &aggregated_secret).unwrap();
+    let aggregated_commitments = commitments[0].clone();
+    let aggregated_signatures = signatures[0].clone();
 
     // Verifying commitments
     c.bench_function("Verifying commitments.", |b| {
@@ -119,18 +128,97 @@ fn bench(n_row: usize, n_col: usize, n_client: usize, decimals: u32, c: &mut Cri
     assert!(signature_check.is_ok());
 }
 
+fn bench_aggregator_aggregations(
+    n_row: usize,
+    n_col: usize,
+    n_client: usize,
+    decimals: u32,
+    c: &mut Criterion,
+) {
+    // Setup
+    let Setup {
+        mkhs,
+        clients,
+        ..
+    } = setup(n_client, n_row, n_col, decimals);
+
+    let commitments: Vec<Vec<Commitment>> = clients
+        .par_iter()
+        .map(|client| client.compute_commitments())
+        .collect();
+
+    // Computing signatures
+    let signatures: Vec<Vec<Signature>> = clients
+        .par_iter()
+        .map(|client| {
+            let fr_dataset = client.dataset.fr();
+            client.compute_signature(&mkhs, &fr_dataset)
+        })
+        .collect();
+
+    // Aggregating commitments
+    c.bench_function("Aggregating commitments.", |b| {
+        b.iter(|| {
+            Aggregator::aggregate_commitments(&commitments);
+        })
+    });
+
+    // Aggregating signatures
+    c.bench_function("Aggregating signatures.", |b| {
+        b.iter(|| {
+            Aggregator::aggregate_signatures(&mkhs, &signatures);
+        })
+    });
+}
+
+fn bench_aggregator_open(n_row: usize, n_col: usize, decimals: u32, c: &mut Criterion) {
+    let n_client = 1;
+    let Setup {
+        aggregated_secret,
+        clients,
+        ..
+    } = setup(n_client, n_row, n_col, decimals);
+
+    // Computing commitments
+    let commitments: Vec<Vec<Commitment>> = clients
+        .par_iter()
+        .map(|client| client.compute_commitments())
+        .collect();
+
+    let aggregated_commitments = commitments[0].clone();
+
+    // Opening commitments
+    c.bench_function("Opening commitments.", |b| {
+        b.iter(|| {
+            let _ = Aggregator::open_commitments(&aggregated_commitments, &aggregated_secret);
+        })
+    });
+}
+
 pub fn criterion_benchmark(c: &mut Criterion) {
     let n_col = 10;
 
     let decimals_vec = vec![4, 6, 8];
-    let n_row_vec = vec![100, 500, 750, 1000, 5000, 7500, 10000, 25000, 50000, 75000, 100000];
-    let n_clients_vec = vec![2, 5, 10];
+    let n_row_vec = vec![
+        100, 500, 750, 1000, 5000, 7500, 10000, 25000, 50000, 75000, 100000,
+    ];
 
+    for decimals in decimals_vec.clone() {
+        for n_row in n_row_vec.clone() {
+            bench_client(n_row, n_col, decimals, c)
+        }
+    }
+
+    let n_clients_vec = vec![2, 5, 10];
     for n_clients in n_clients_vec {
-        for decimals in decimals_vec.clone() {
-            for n_row in n_row_vec.clone() {
-                bench(n_row, n_col, n_clients, decimals, c)
-            }
+        for n_row in n_row_vec.clone() {
+            bench_aggregator_aggregations(n_row, n_col, n_clients, 4, c)
+        }
+    }
+
+    for decimals in decimals_vec.clone() {
+        for n_row in n_row_vec.clone() {
+            bench_aggregator_open(n_row, n_col, decimals, c)
         }
     }
 }
